@@ -229,3 +229,58 @@ friedman.test(mat_eyr)
 pairwise.wilcox.test(data_long_glu$Nb_mares, data_long_glu$Passage, paired = TRUE, p.adjust.method = "BH")
 
 pairwise.wilcox.test(data_long_eyr$Nb_mares, data_long_eyr$Passage, paired = TRUE, p.adjust.method = "BH")
+
+data_var <- data %>%
+  st_drop_geometry() %>%
+  rowwise() %>%
+  mutate(
+    dernier_mar = dplyr::coalesce(NBR_MAR_P3, NBR_MAR_P2, NBR_MAR_P1),
+    variation_pct = (dernier_mar - NBR_MAR_P1) / NBR_MAR_P1 * 100,
+    occupe = any(c(SONN_P1, SONN_P2, SONN_P3) > 0, na.rm = TRUE),
+    categorie = case_when(
+      variation_pct > 0                          ~ "Augmentation",
+      variation_pct <= 0  & variation_pct > -10   ~ "Peu variant",
+      variation_pct <= -10 & variation_pct > -25  ~ "-10% à -25%",
+      variation_pct <= -25 & variation_pct > -50  ~ "-25% à -50%",
+      variation_pct <= -50 & variation_pct > -80  ~ "-50% à -80%",
+      variation_pct <= -80                        ~ "-80% à -100%",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  ungroup() %>%
+  mutate(
+    categorie = factor(categorie, levels = c("Augmentation", "Peu variant", 
+                                             "-10% à -25%", "-25% à -50%", 
+                                             "-50% à -80%", "-80% à -100%"))
+  ) %>%
+  filter(!is.na(categorie))
+
+# Tableau par rivière : nombre de sites total et occupés par catégorie
+tableau_vasques <- data_var %>%
+  group_by(RIVIERE, categorie) %>%
+  summarise(
+    n_sites = n(),
+    n_occupes = sum(occupe, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(affichage = paste0(n_sites, " (", n_occupes, ")")) %>%
+  select(RIVIERE, categorie, affichage) %>%
+  pivot_wider(names_from = categorie, values_from = affichage)
+
+print(tableau_vasques)
+
+tableau_synth <- data_var %>%
+  group_by(categorie) %>%
+  summarise(
+    n_sites = n(),
+    n_occupes = sum(occupe, na.rm = TRUE),
+    taux_occupation = round(100 * n_occupes / n_sites, 1),
+    .groups = "drop")
+
+ggplot(tableau_synth, aes(x = categorie, y = taux_occupation)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = paste0(taux_occupation, "%")), vjust = -0.5) +
+  labs(x = "Variation du nombre de mares (P1 → dernier passage)",
+       y = "Taux d'occupation (%)",
+       title = "Occupation des sites selon la pérennité des mares") +
+  theme_minimal()

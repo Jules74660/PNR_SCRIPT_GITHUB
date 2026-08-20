@@ -48,13 +48,15 @@ summary(DUCA)
 #### Données de 2012 : Jego ####
 
 JEGO <-  sf::st_read("IMPORT/2020/DONNEES_SONNEURS_Jego_2020.shp")  %>% st_transform(crs = 2154) 
-
+summary(JEGO)
 #### Données de 2024 : Peigné ####
 
 PEIG <- read.csv(file = "IMPORT/2024/DONNEES_SONNEURS_2024_CP.csv") %>%
   mutate(X = as.numeric(gsub(",", ".", X)),Y = as.numeric(gsub(",", ".", Y))) %>% 
   filter(!is.na(X), !is.na(Y)) %>%
   st_as_sf(coords = c("X", "Y"), crs = 4326, remove = FALSE)
+
+summary(PEIG)
 
 # Association des sites avec effectifs des sonneurs sur les différents passages au jeu de données 2026 (ROES)
 

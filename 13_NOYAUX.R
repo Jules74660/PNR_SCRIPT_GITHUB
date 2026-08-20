@@ -25,7 +25,7 @@ data %>%
   summarise(EFF_MAX = sum(EFF_MAX, na.rm = TRUE))
 
 DUCA <- sf::st_read("IMPORT/2012/DONNEES_SONNEURS_Ducasse_2012.shp") %>% st_transform(crs = 2154) 
-
+str(DUCA)
 # extrait num par ce sinon charactere
 DUCA2 <- DUCA %>%
   st_drop_geometry() %>%
@@ -423,3 +423,41 @@ data <- data %>%
 
 res_2026 <- calc_occupation_noyaux(data, "Site", "EFF2026", breaks_2020_glu)
 res_2026
+
+
+# occupation
+
+JEGO <- sf::st_read("IMPORT/2020/DONNEES_SITES_Jego_2020.shp") %>%
+  st_transform(crs = 2154)
+
+str(JEGO)
+
+PEIG <- read.csv(file = "IMPORT/2024/DONNEES_SONNEURS_2024_CP.csv") %>%
+  mutate(X = as.numeric(gsub(",", ".", X)),Y = as.numeric(gsub(",", ".", Y))) %>% 
+  filter(!is.na(X), !is.na(Y)) %>%
+  st_as_sf(coords = c("X", "Y"), crs = 4326, remove = FALSE)
+
+str(PEIG)
+
+occupation_jego <- JEGO %>%
+  st_drop_geometry() %>%
+  mutate(
+    occ_P1 = Eff_tot_P1 > 0,
+    occ_P2 = Eff_tot_P2 > 0
+  ) %>%
+  group_by(NOM_MILIEU) %>%
+  summarise(
+    n_sites = n(),
+    taux_occ_P1 = round(100 * sum(occ_P1, na.rm = TRUE) / n(), 1),
+    taux_occ_P2 = round(100 * sum(occ_P2, na.rm = TRUE) / n(), 1),
+    .groups = "drop"
+  )
+
+occupation_peig <- PEIG %>%
+  st_drop_geometry() %>%
+  group_by(ce) %>%
+  summarise(
+    n_sites = n(),
+    taux_occ_P1 = round(100 * sum(presence_P1, na.rm = TRUE) / n(), 1),
+    taux_occ_P2 = round(100 * sum(presence_P2, na.rm = TRUE) / n(), 1),
+    .groups = "drop")

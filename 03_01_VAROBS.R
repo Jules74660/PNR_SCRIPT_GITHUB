@@ -149,3 +149,7 @@ sum(complete.cases(varobs$ANAIS_SON, varobs$JUL_SON))
 
 limiterep <- sf::st_read("IMPORT/LIMITES_REP_2026.shp") %>% select(ID_SITE)
 
+write.csv(DETECT_GLU,"AIC_GLU_DETECT.csv", row.names = FALSE)
+write.csv(DETECT_EYR,"AIC_EYR_DETECT.csv", row.names = FALSE)
+write.csv(ABOND_EYR,"AIC_EYR_ABOND.csv", row.names = FALSE)
+

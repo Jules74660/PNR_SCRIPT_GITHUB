@@ -98,6 +98,7 @@ data <- data %>%
 sapply(data[vars_a_standardiser], mean, na.rm = TRUE)
 sapply(data[vars_a_standardiser], sd, na.rm = TRUE)
 
+
 # COVARIABLES DE SITE 
 
 # ALTI : Altitude
@@ -121,6 +122,9 @@ sapply(data[vars_a_standardiser], sd, na.rm = TRUE)
 # FF_P1/P2/P3  : Force du vent 
 # FF_P1/P2/P3  : Hauteur d'eau
 # RR1_P1/P2/P3  : Cumul des précipitations des 24 heures précédents 
+
+save(data, file = "SAUVEGARDES/data_mod.RData")
+load("SAUVEGARDES/data_mod.RData")
 
 ################################################################################
 ############################### Choix du modèle ################################
@@ -645,7 +649,7 @@ mod4log <- pcount(~NBR_MAR + U  ~log_MAR_MAX + ALTI, data = umf_eyr, mixture = "
 aictab(list(mod4, mod4log),modnames = c("mar_max","logmarmax"))
 # meilleur est toujours mod4 
 
-aictab(list(eyr_abond_null, eyr_abond_marmax, eyr_abond_mar50, eyr_abond_ouvrage, eyr_abond_alti, eyr_abond_f500, eyr_abond_dh500, eyr_abond_dr500, eyr_abond_rive, eyr_abond_full,mod1, mod2, mod3, mod4, mod5),modnames = c("null","MAR_MAX","MAR50","OUVRAGE","ALTI","F500","DH500","DR500", "RIVE","full","DH500","DR500","OUVRAGE", "ALTI", "FULL"))
+ABOND_EYR <- aictab(list(eyr_abond_null, eyr_abond_marmax, eyr_abond_mar50, eyr_abond_ouvrage, eyr_abond_alti, eyr_abond_f500, eyr_abond_dh500, eyr_abond_dr500, eyr_abond_rive, eyr_abond_full,mod1, mod2, mod3, mod4, mod5),modnames = c("null","MAR_MAX","MAR50","OUVRAGE","ALTI","F500","DH500","DR500", "RIVE","full","MAR_MAX + DH500","MAR_MAX + DR500","MAR_MAX +OUVRAGE", "MAR_MAX +ALTI", "MAR_MAX +FULL"))
 
 ajusteyr <- Nmix.gof.test(mod4, nsim = 1000)
 summary(mod4)
@@ -781,3 +785,6 @@ apply(pb_glu_combine@t.star, 2, quantile, probs = c(0.025, 0.975))  # IC 95% pou
 summary(pb_glu_combine@t.star[, "Ntotal"])
 hist(pb_glu_combine@t.star[, "Ntotal"], breaks = 50)
 abline(v = pb_glu_combine@t0["Ntotal"], col = "red", lwd = 2)
+
+
+coef(MOD_final_glu, type="det")
